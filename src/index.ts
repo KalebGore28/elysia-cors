@@ -94,12 +94,12 @@ interface CORSConfig {
 	 * - eg: ['GET', 'PUT', 'POST']
 	 */
 	methods?:
-		| boolean
-		| undefined
-		| null
-		| ''
-		| '*'
-		| MaybeArray<HTTPMethod | (string & {})>
+	| boolean
+	| undefined
+	| null
+	| ''
+	| '*'
+	| MaybeArray<HTTPMethod | (string & {})>
 	/**
 	 * @default `*`
 	 *
@@ -313,20 +313,29 @@ export const cors = (config?: CORSConfig) => {
 		handleOrigin(set as any, request)
 		handleMethod(set, request.headers.get('access-control-request-method'))
 
-		if (allowedHeaders === true || exposeHeaders === true) {
-			if (allowedHeaders === true)
-				set.headers['access-control-allow-headers'] =
-					headers['access-control-request-headers']
-
-			if (exposeHeaders === true)
-				set.headers['access-control-expose-headers'] =
-					Object.keys(headers).join(',')
+		if (allowedHeaders || exposeHeaders) {
+			if (allowedHeaders) {
+				if (typeof allowedHeaders === 'string') {
+					set.headers['access-control-allow-headers'] = allowedHeaders;
+				} else {
+					set.headers['access-control-allow-headers'] =
+						headers['access-control-request-headers'];
+				}
+			}
+			if (exposeHeaders) {
+				if (typeof exposeHeaders === 'string') {
+					set.headers['access-control-expose-headers'] = exposeHeaders;
+				} else {
+					set.headers['access-control-expose-headers'] =
+						Object.keys(headers).join(',');
+				}
+			}
 		}
 
 		if (credentials === true) {
 			set.headers['access-control-allow-credentials'] = 'true'
 		}
-		
+
 		if (maxAge) set.headers['access-control-max-age'] = maxAge.toString()
 
 		return new Response(null, {
@@ -340,16 +349,24 @@ export const cors = (config?: CORSConfig) => {
 		handleOrigin(set, request)
 		handleMethod(set, request.method)
 
-		if (allowedHeaders === true || exposeHeaders === true) {
-
-			const headers = processHeaders(request.headers)
-
-			if (allowedHeaders === true)
-				set.headers['access-control-allow-headers'] = headers
-
-			if (exposeHeaders === true)
-				set.headers['access-control-expose-headers'] = headers
+		if (allowedHeaders || exposeHeaders) {
+			const processed = processHeaders(request.headers);
+			if (allowedHeaders) {
+				if (typeof allowedHeaders === 'string') {
+					set.headers['access-control-allow-headers'] = allowedHeaders;
+				} else {
+					set.headers['access-control-allow-headers'] = processed;
+				}
+			}
+			if (exposeHeaders) {
+				if (typeof exposeHeaders === 'string') {
+					set.headers['access-control-expose-headers'] = exposeHeaders;
+				} else {
+					set.headers['access-control-expose-headers'] = processed;
+				}
+			}
 		}
+
 
 		// Ensure the Access-Control-Allow-Credentials header is always set if credentials is true.
 		if (credentials === true) {
